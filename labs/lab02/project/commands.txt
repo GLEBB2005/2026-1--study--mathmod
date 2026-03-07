@@ -1,0 +1,5 @@
+julia --project=. scripts/lab02_pursuit.jl
+
+
+
+julia --project=. scripts/tangle.jl scripts/lab02_pursuit.jl
