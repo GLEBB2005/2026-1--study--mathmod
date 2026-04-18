@@ -184,36 +184,36 @@ class ReleaseManager:
         print(f"✅ Релиз {version} завершен, тег v{version} создан")
     
     def push_to_repositories(self, version: str) -> None:
-        """Пуш во все репозитории"""
-        master_branch = self.config["git_flow"]["master_branch"]
-        develop_branch = self.config["git_flow"]["develop_branch"]
-        tag_name = f"v{version}"
+    """Пуш во все репозитории"""
+    master_branch = self.config["git_flow"]["master_branch"]
+    develop_branch = self.config["git_flow"]["develop_branch"]
+    tag_name = f"v{version}"
+    
+    # Проверяем существование тега
+    tag_check = self.run_command(["git", "tag", "-l", tag_name], check=False)
+    if not tag_check.stdout.strip():
+        print(f"⚠️ Тег {tag_name} не найден, создаю...")
+        self.run_command(["git", "tag", "-a", tag_name, "-m", f"Release {version}"])
+    
+    for repo in self.config["repositories"]:
+        repo_name = repo["name"]
+        repo_url = repo["url"]
         
-        # Проверяем существование тега
-        tag_check = self.run_command(["git", "tag", "-l", tag_name], check=False)
-        if not tag_check.stdout.strip():
-            print(f"⚠️ Тег {tag_name} не найден, создаю...")
-            self.run_command(["git", "tag", "-a", tag_name, "-m", f"Release {version}"])
+        # Добавляем remote если его нет
+        self.run_command(["git", "remote", "add", repo_name, repo_url], check=False)
         
-        for repo in self.config["repositories"]:
-            repo_name = repo["name"]
-            repo_url = repo["url"]
-            
-            # Добавляем remote если его нет
-            self.run_command(["git", "remote", "add", repo_name, repo_url], check=False)
-            
-            print(f"📤 Пуш в {repo_name} ({repo_url})...")
-            
-            # Пушим master
-            self.run_command(["git", "push", repo_name, master_branch])
-            
-            # Пушим develop
-            self.run_command(["git", "push", repo_name, develop_branch])
-            
-            # Пушим тег с префиксом v
-            self.run_command(["git", "push", repo_name, tag_name])
-            
-            print(f"✅ Успешно отправлено в {repo_name}")
+        print(f"📤 Пуш в {repo_name} ({repo_url})...")
+        
+        # Пушим master принудительно
+        self.run_command(["git", "push", "--force", repo_name, master_branch])
+        
+        # Пушим develop принудительно
+        self.run_command(["git", "push", "--force", repo_name, develop_branch])
+        
+        # Пушим тег принудительно (с префиксом v)
+        self.run_command(["git", "push", "--force", repo_name, tag_name])
+        
+        print(f"✅ Успешно отправлено в {repo_name}")
     
     def verify_release(self, version: str) -> bool:
         """Проверка успешности релиза"""
