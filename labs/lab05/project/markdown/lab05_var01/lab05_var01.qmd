@@ -1,0 +1,189 @@
+# Модель Лотки-Вольтерры. Вариант 1
+
+**Цель:** Исследовать решение системы дифференциальных уравнений
+для модели «хищник-жертва» с заданными параметрами.
+Найти стационарное состояние и построить графики динамики популяций.
+
+## Инициализация проекта и загрузка пакетов
+
+```{julia}
+using DrWatson
+@quickactivate "project"
+
+using DifferentialEquations
+using Plots
+using DataFrames
+using JLD2
+
+script_name = splitext(basename(PROGRAM_FILE))[1]
+mkpath(plotsdir(script_name))
+mkpath(datadir(script_name))
+```
+
+## Определение модели
+Система дифференциальных уравнений для Варианта 1:
+  dx/dt = -0.12 * x + 0.041 * x * y
+  dy/dt =  0.32 * y - 0.029 * x * y
+
+где x - численность хищников, y - численность жертв.
+
+```{julia}
+function lotka_volterra!(du, u, p, t)
+    x, y = u
+    a, b, c, d = p
+    @inbounds begin
+        du[1] = -a * x + b * x * y   # Уравнение для хищников (x)
+        du[2] =  c * y - d * x * y   # Уравнение для жертв (y)
+    end
+    nothing
+end
+```
+
+## Параметры модели и начальные условия для Варианта 1
+Параметры: [a, b, c, d]
+
+```{julia}
+p = [0.12, 0.041, 0.32, 0.029]
+```
+
+Начальные условия: [x0, y0]
+
+```{julia}
+u0 = [6.0, 11.0]
+```
+
+Временной интервал
+
+```{julia}
+tspan = (0.0, 100.0)
+```
+
+## Решение дифференциальных уравнений
+
+```{julia}
+prob = ODEProblem(lotka_volterra!, u0, tspan, p)
+sol = solve(prob, Tsit5(), saveat=0.1)
+```
+
+## Стационарное состояние системы
+Находится из условия du/dt = 0:
+x_star = c / d
+y_star = a / b
+
+```{julia}
+x_star = p[3] / p[4]
+y_star = p[1] / p[2]
+
+println("="^60)
+println("Модель Лотки-Вольтерры. Вариант 1")
+println("="^60)
+println("Параметры модели:")
+println("  a (смертность хищников) = ", p[1])
+println("  b (прирост хищников) = ", p[2])
+println("  c (прирост жертв) = ", p[3])
+println("  d (смертность жертв) = ", p[4])
+println("\nНачальные условия:")
+println("  x0 (хищники) = ", u0[1])
+println("  y0 (жертвы) = ", u0[2])
+println("\nСтационарное состояние:")
+println("  x* = c/d = ", round(x_star, digits=3))
+println("  y* = a/b = ", round(y_star, digits=3))
+```
+
+## Подготовка данных для анализа и визуализации
+Создаем DataFrame для удобства
+
+```{julia}
+df = DataFrame(
+    t = sol.t,
+    x = [u[1] for u in sol.u], # Хищники
+    y = [u[2] for u in sol.u]  # Жертвы
+)
+```
+
+## Визуализация результатов
+
+### График 1: Динамика популяций во времени
+
+```{julia}
+plt1 = plot(
+    df.t, [df.x, df.y],
+    label = ["Хищники (x)" "Жертвы (y)"],
+    xlabel = "Время",
+    ylabel = "Численность популяции",
+    title = "Динамика популяций хищников и жертв",
+    linewidth = 2,
+    legend = :topright,
+    color = [:red :green],
+    size = (900, 500)
+)
+```
+
+Добавляем линии стационарного состояния
+
+```{julia}
+hline!(plt1, [x_star], color=:red, linestyle=:dash, alpha=0.5, label="x* (равновесие хищников)")
+hline!(plt1, [y_star], color=:green, linestyle=:dash, alpha=0.5, label="y* (равновесие жертв)")
+
+savefig(plotsdir(script_name, "01_population_dynamics.png"))
+```
+
+### График 2: Фазовый портрет (зависимость численности хищников от численности жертв)
+
+```{julia}
+plt2 = plot(
+    df.y, df.x,
+    label = "Фазовая траектория",
+    xlabel = "Численность жертв (y)",
+    ylabel = "Численность хищников (x)",
+    title = "Фазовый портрет системы",
+    linewidth = 2,
+    color = :blue,
+    size = (800, 600),
+    legend = :topright
+)
+```
+
+Добавляем стрелку направления движения (опционально)
+plot!(plt2, [df.y[1], df.y[10]], [df.x[1], df.x[10]], arrow=:closed, color=:blue, label="")
+Добавляем точку стационарного состояния
+
+```{julia}
+scatter!(plt2, [y_star], [x_star], color=:black, markersize=8, label="Стационарная точка (y*, x*)")
+
+savefig(plotsdir(script_name, "02_phase_portrait.png"))
+```
+
+### График 3: Объединенный график для отчета
+
+```{julia}
+plt3 = plot(
+    layout = (2, 1),
+    size = (900, 800)
+)
+plot!(plt3[1], df.t, [df.x, df.y], label=["Хищники" "Жертвы"], xlabel="Время", ylabel="Численность", title="Динамика популяций", color=[:red :green], linewidth=2)
+hline!(plt3[1], [x_star], color=:red, linestyle=:dash, label="")
+hline!(plt3[1], [y_star], color=:green, linestyle=:dash, label="")
+plot!(plt3[2], df.y, df.x, label="Фазовая траектория", xlabel="Жертвы (y)", ylabel="Хищники (x)", title="Фазовый портрет", color=:blue, linewidth=2)
+scatter!(plt3[2], [y_star], [x_star], color=:black, markersize=5, label="Стационарная точка")
+
+savefig(plotsdir(script_name, "03_combined_plot.png"))
+```
+
+## Сохранение данных
+
+```{julia}
+@save datadir(script_name, "simulation_results.jld2") df p u0
+
+println("\nРезультаты сохранены в:")
+println("  Графики: ", plotsdir(script_name))
+println("  Данные:  ", datadir(script_name))
+println("="^60)
+```
+
+Отображаем графики (при интерактивном запуске)
+
+```{julia}
+display(plt3)
+```
+
