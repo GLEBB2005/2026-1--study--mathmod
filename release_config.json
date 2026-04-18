@@ -1,0 +1,21 @@
+{
+  "version": "5.0.0",
+  "repositories": [
+    {
+      "name": "origin",
+      "url": "git@github.com:GLEBB2005/2026-1--study--mathmod.git"
+    },
+    {
+      "name": "gitverse",
+      "url": "git@gitverse.ru:glebqa/2026-1--study--mathmod.git"
+    }
+  ],
+  "git_flow": {
+    "develop_branch": "develop",
+    "master_branch": "master",
+    "feature_prefix": "feature/",
+    "release_prefix": "release/",
+    "hotfix_prefix": "hotfix/"
+  },
+  "auto_confirm": false
+}
