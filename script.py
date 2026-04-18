@@ -1,4 +1,4 @@
-м#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 Скрипт для автоматического создания релиза с использованием git-flow и standard-version
 """
