@@ -44,6 +44,7 @@ format:
     toc-depth: 2
     lof: true # List of figures
     lot: true # List of tables
+    fig-format: png
     #### Document
     documentclass: scrreprt
     papersize: a4
