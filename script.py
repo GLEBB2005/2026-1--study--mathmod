@@ -184,7 +184,6 @@ class ReleaseManager:
         print(f"✅ Релиз {version} завершен, тег v{version} создан")
     
     def push_to_repositories(self, version: str) -> None:
-    """Пуш во все репозитории"""
     master_branch = self.config["git_flow"]["master_branch"]
     develop_branch = self.config["git_flow"]["develop_branch"]
     tag_name = f"v{version}"
