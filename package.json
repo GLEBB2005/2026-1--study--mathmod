@@ -1,6 +1,6 @@
 {
   "name": "simulation-modeling",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "description": "Имитационное моделирование",
   "main": "index.js",
   "repository": "ssh://git@gitverse.ru:2222/glebqa/2026-1--study--simulation-modeling.git",
